@@ -1,7 +1,7 @@
 # trungnt-android3-assignment12
 
 ##Yêu cầu:
-+ Chuyển bài đọc RSS từ Async Task sang dùng Service
++ [Chuyển bài đọc RSS từ Async Task sang dùng Service](https://github.com/trantrungnt/trungnt-android3-assignment11)
 ![BTVN Asyc Task Read RSS](http://i477.photobucket.com/albums/rr132/trungepu/AsyncTask-ReadRSS_zpsnfoobfpr.jpg)
 
 ##Môi trường phát triển
