@@ -1,6 +1,5 @@
 package techkids.mad3.servicexmlparse;
 
-import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -20,26 +19,12 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 import java.util.List;
 
-/**
- * An activity representing a list of Items. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
- */
 public class ItemListActivity extends AppCompatActivity {
-
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
-    private boolean mTwoPane;
     private List<VnExpressXmlParser.Item> items = null;
     private RecyclerView recyclerView;
     private Intent intent;
     private Bundle bundle;
     private String urlRSS = "http://vnexpress.net/rss/tin-moi-nhat.rss";
-    private String urlResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +36,9 @@ public class ItemListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        //tai file XML va doc RSS
         loadXMLfromDownloadService();
+        //sau khi doc xong RSS thi gan du lieu vao RecycleView
         setupRecyclerView();
     }
 
@@ -93,7 +80,6 @@ public class ItemListActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 bundle = intent.getExtras();
                 items = (List<VnExpressXmlParser.Item>) bundle.getSerializable("GET_ITEMS");
-                Log.d("Size ?????", String.valueOf(items.size()));
                 recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(items));
             }
         };
@@ -138,9 +124,9 @@ public class ItemListActivity extends AppCompatActivity {
             holder.pubDate.setText(mValues.get(position).pubDate);
 
             //tim link anh jpg va cat chuoi, sau do load anh jpg voi thu vien Picasso
-            int startDescription = description.indexOf("src=\"http://");
-            int endDescription = description.indexOf(".jpg");
-            final String urlImage = description.substring(startDescription + 5, endDescription + 4);
+            int startURLDescriptionImage = description.indexOf("src=\"http://");
+            int endURLDescriptionImage = description.indexOf(".jpg");
+            final String urlImage = description.substring(startURLDescriptionImage + 5, endURLDescriptionImage + 4);
             Picasso.with(holder.image.getContext()).load(urlImage).into(holder.image);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -159,6 +145,7 @@ public class ItemListActivity extends AppCompatActivity {
             return mValues.size();
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
         public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
             public final ImageView image;
