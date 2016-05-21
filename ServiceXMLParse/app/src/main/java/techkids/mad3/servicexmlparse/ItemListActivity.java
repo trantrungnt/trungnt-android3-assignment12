@@ -25,6 +25,11 @@ public class ItemListActivity extends AppCompatActivity {
     private Intent intent;
     private Bundle bundle;
     private String urlRSS = "http://vnexpress.net/rss/tin-moi-nhat.rss";
+    private int startDescription;
+    private String contentDescription;
+    private int startURLDescriptionImage, endURLDescriptionImage;
+    private String urlImage;
+    private String description;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,19 +119,21 @@ public class ItemListActivity extends AppCompatActivity {
                 Log.d("XMLL", "" + mValues.get(position).title);
                 Log.d("XMLL", "" + mValues.get(position).description);
                 Log.d("XMLL", "" + mValues.get(position).pubDate);
-
             }
 
-            String description = mValues.get(position).description;
+            description = mValues.get(position).description;
 
             holder.title.setText(mValues.get(position).title);
-            holder.description.setText(description);
+
+            startDescription = description.indexOf("</a></br>");
+            contentDescription = description.substring(startDescription + 9);
+            holder.description.setText(contentDescription);
             holder.pubDate.setText(mValues.get(position).pubDate);
 
             //tim link anh jpg va cat chuoi, sau do load anh jpg voi thu vien Picasso
-            int startURLDescriptionImage = description.indexOf("src=\"http://");
-            int endURLDescriptionImage = description.indexOf(".jpg");
-            final String urlImage = description.substring(startURLDescriptionImage + 5, endURLDescriptionImage + 4);
+            startURLDescriptionImage = description.indexOf("src=\"http://");
+            endURLDescriptionImage = description.indexOf(".jpg");
+            urlImage = description.substring(startURLDescriptionImage + 5, endURLDescriptionImage + 4);
             Picasso.with(holder.image.getContext()).load(urlImage).into(holder.image);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
