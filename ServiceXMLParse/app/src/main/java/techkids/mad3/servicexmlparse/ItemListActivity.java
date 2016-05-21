@@ -1,12 +1,12 @@
 package techkids.mad3.servicexmlparse;
 
+import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.design.widget.FloatingActionButton;
@@ -17,19 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-
 import com.squareup.picasso.Picasso;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -46,14 +34,30 @@ public class ItemListActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
-    List<VnExpressXmlParser.Item> items = null;
-    RecyclerView recyclerView;
+    private List<VnExpressXmlParser.Item> items = null;
+    private RecyclerView recyclerView;
+    private Intent intent;
+    private Bundle bundle;
+    private String urlRSS = "http://vnexpress.net/rss/tin-moi-nhat.rss";
+    private String urlResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_list);
+        initComponent();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadXMLfromDownloadService();
+        setupRecyclerView();
+    }
+
+    //khoi tao cac thanh phan cua giao dien
+    private void initComponent()
+    {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
@@ -68,22 +72,35 @@ public class ItemListActivity extends AppCompatActivity {
         });
 
         recyclerView = (RecyclerView) findViewById(R.id.item_list);
-        setupRecyclerView();
-
-//        if (findViewById(R.id.item_detail_container) != null) {
-//            // The detail container view will be present only in the
-//            // large-screen layouts (res/values-w900dp).
-//            // If this view is present, then the
-//            // activity should be in two-pane mode.
-//            mTwoPane = true;
-//        }
-
     }
 
+
+    //doc RSS XML dung Download Service
+    private void loadXMLfromDownloadService()
+    {
+        //gui link URL RSS cho Service DownloadService xu ly
+        intent = new Intent(ItemListActivity.this, DownloadXmlService.class);
+        bundle = new Bundle();
+        bundle.putString("URL_RSS", urlRSS);
+        intent.putExtras(bundle);
+        startService(intent);
+    }
+
+    //Service xu ly load chuoi URL va download XML ve xu ly (dung Intent va Bundle de day sang cho ItemListActivity)
     private void setupRecyclerView() {
-        new DownloadXmlTask().execute("http://vnexpress.net/rss/tin-moi-nhat.rss");
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                bundle = intent.getBundleExtra("INTENT_ITEMS");
+                items = (List<VnExpressXmlParser.Item>) bundle.getSerializable("GET_ITEMS");
+                recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(items));
+            }
+        };
+
+        registerReceiver(broadcastReceiver, new IntentFilter("FILTER_DOWNLOAD_XML_PARSE"));
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
@@ -128,21 +145,6 @@ public class ItemListActivity extends AppCompatActivity {
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-//                    if (mTwoPane) {
-//                        Bundle arguments = new Bundle();
-//                        arguments.putString(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-//                        ItemDetailFragment fragment = new ItemDetailFragment();
-//                        fragment.setArguments(arguments);
-//                        getSupportFragmentManager().beginTransaction()
-//                                .replace(R.id.item_detail_container, fragment)
-//                                .commit();
-//                    } else {
-//                        Context context = v.getContext();
-//                        Intent intent = new Intent(context, ItemDetailActivity.class);
-//                        intent.putExtra(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-//
-//                        context.startActivity(intent);
-//                    }
                     Context context = v.getContext();
                     Intent intent = new Intent(context, ItemDetailActivity.class);
                     intent.putExtra("urlDescription", mValues.get(position).link);
@@ -175,62 +177,4 @@ public class ItemListActivity extends AppCompatActivity {
         }
     }
 
-    // Implementation of AsyncTask used to download XML feed from stackoverflow.com.
-    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return loadXmlFromNetwork(urls[0]);
-            } catch (IOException e) {
-                return getResources().getString(R.string.connection_error);
-            } catch (XmlPullParserException e) {
-                return getResources().getString(R.string.xml_error);
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(items));
-        }
-    }
-
-    // Uploads XML from stackoverflow.com, parses it, and combines it with
-// HTML markup. Returns HTML string.
-    private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
-        InputStream stream = null;
-        // Instantiate the parser
-        VnExpressXmlParser vnExpressXmlParser = new VnExpressXmlParser();
-        String title = null;
-        String url = null;
-        String summary = null;
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
-
-        try {
-            stream = downloadUrl(urlString);
-            items = vnExpressXmlParser.parse(stream);
-            // Makes sure that the InputStream is closed after the app is
-            // finished using it.
-        } finally {
-            if (stream != null) {
-                stream.close();
-            }
-        }
-
-        return null;
-    }
-
-    // Given a string representation of a URL, sets up a connection and gets
-// an input stream.
-    private InputStream downloadUrl(String urlString) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000 /* milliseconds */);
-        conn.setConnectTimeout(15000 /* milliseconds */);
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        // Starts the query
-        conn.connect();
-        return conn.getInputStream();
-    }
 }

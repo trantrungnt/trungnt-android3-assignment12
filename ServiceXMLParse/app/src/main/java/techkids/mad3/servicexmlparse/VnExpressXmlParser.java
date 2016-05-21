@@ -7,6 +7,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class VnExpressXmlParser {
         return items;
     }
 
-    public static class Item {
+    public static class Item implements Serializable {
         public final String title;
         public final String description;
         public final String pubDate;
