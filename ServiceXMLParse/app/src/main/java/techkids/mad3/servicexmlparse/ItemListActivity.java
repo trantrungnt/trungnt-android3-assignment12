@@ -91,8 +91,9 @@ public class ItemListActivity extends AppCompatActivity {
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                bundle = intent.getBundleExtra("INTENT_ITEMS");
+                bundle = intent.getExtras();
                 items = (List<VnExpressXmlParser.Item>) bundle.getSerializable("GET_ITEMS");
+                Log.d("Size ?????", String.valueOf(items.size()));
                 recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(items));
             }
         };

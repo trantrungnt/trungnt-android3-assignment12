@@ -34,24 +34,16 @@ public class DownloadXmlService extends IntentService {
         urlRSS = bundleGetURL.getString("URL_RSS");
 
         try {
-            loadXmlFromNetwork(urlRSS);
+           loadXmlFromNetwork(urlRSS);
+
         } catch (XmlPullParserException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-        intentResult = new Intent();
-        bundleResult = new Bundle();
-        //items = new ArrayList<VnExpressXmlParser.Item>();
-        bundleGetURL.putSerializable("GET_ITEMS", (Serializable) items);
-        intentResult.putExtra("INTENT_ITEMS", bundleResult);
-        intentResult.setAction("FILTER_DOWNLOAD_XML_PARSE");
-        sendBroadcast(intentResult);
     }
 
-    private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
+    private void loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         // Instantiate the parser
         VnExpressXmlParser vnExpressXmlParser = new VnExpressXmlParser();
@@ -59,15 +51,20 @@ public class DownloadXmlService extends IntentService {
         try {
             stream = downloadUrl(urlString);
             items = vnExpressXmlParser.parse(stream);
-            // Makes sure that the InputStream is closed after the app is
-            // finished using it.
+
+            intentResult = new Intent();
+            bundleResult = new Bundle();
+            //items = new ArrayList<VnExpressXmlParser.Item>();
+            bundleResult.putSerializable("GET_ITEMS", (Serializable) items);
+            intentResult.putExtras(bundleResult);
+            intentResult.setAction("FILTER_DOWNLOAD_XML_PARSE");
+            sendBroadcast(intentResult);
+
         } finally {
             if (stream != null) {
                 stream.close();
             }
         }
-
-        return null;
     }
 
     // Given a string representation of a URL, sets up a connection and gets

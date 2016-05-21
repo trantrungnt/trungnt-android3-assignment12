@@ -20,6 +20,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".ItemDetailActivity"></activity>
+        <service
+            android:name=".DownloadXmlService"
+            android:exported="false">
+        </service>
     </application>
 
 </manifest>
