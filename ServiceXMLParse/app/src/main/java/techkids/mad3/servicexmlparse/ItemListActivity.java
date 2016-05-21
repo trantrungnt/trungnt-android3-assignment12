@@ -41,7 +41,7 @@ public class ItemListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //tai file XML va doc RSS
+        //download file XML va doc RSS
         loadXMLfromDownloadService();
         //sau khi doc xong RSS thi gan du lieu vao RecycleView
         setupRecyclerView();
@@ -133,8 +133,13 @@ public class ItemListActivity extends AppCompatActivity {
             //tim link anh jpg va cat chuoi, sau do load anh jpg voi thu vien Picasso
             startURLDescriptionImage = description.indexOf("src=\"http://");
             endURLDescriptionImage = description.indexOf(".jpg");
-            urlImage = description.substring(startURLDescriptionImage + 5, endURLDescriptionImage + 4);
-            Picasso.with(holder.image.getContext()).load(urlImage).into(holder.image);
+            try {
+                urlImage = description.substring(startURLDescriptionImage + 5, endURLDescriptionImage + 4);
+                Picasso.with(holder.image.getContext()).load(urlImage).into(holder.image);
+            } catch (Exception e)
+            {
+                System.out.println(e.toString());
+            }
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
